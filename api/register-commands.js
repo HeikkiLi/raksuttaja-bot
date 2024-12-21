@@ -1,72 +1,59 @@
-const { Client, GatewayIntentBits } = require('discord.js');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v10');
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+// Ensure that these environment variables are correctly loaded
+const clientId = process.env.CLIENT_ID;
+const token = process.env.BOT_TOKEN;
 
-const commands = [
-  {
-    name: 'roll',
-    description: 'Roll a dice',
-    options: [
-      {
-        name: 'dice',
-        type: 3, // String
-        description: 'Dice notation (e.g., 1d6)',
-        required: true,
-      },
-    ],
-  },
-  {
-    name: 'weather',
-    description: 'Get weather for a city',
-    options: [
-      {
-        name: 'city',
-        type: 3, // String
-        description: 'City name',
-        required: true,
-      },
-    ],
-  },
-  {
-    name: 'gif',
-    description: 'Fetch a random GIF based on keywords',
-    options: [
+if (!clientId || !token) {
+  console.error("CLIENT_ID or BOT_TOKEN is missing in .env");
+  process.exit(1);
+}
+
+const rest = new REST({ version: '10' }).setToken(token);
+
+async function registerCommands() {
+  const commands = [
+    {
+      name: 'ping',
+      description: 'Replies with pong',
+    },
+    {
+      name: 'roll',
+      description: 'Roll a dice',
+      options: [
         {
-            name: 'keywords',
-            type: 3, // String
-            description: 'Keywords for the GIF search',
-            required: true,
+          type: 3,  // STRING
+          name: 'dice_expression',
+          description: 'Enter the dice expression (e.g., 2d6)',
+          required: true,
         },
-    ],
-  },
-  // more commands here
-];
-
-
-// Create a new REST client with the bot's token
-const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
-
-client.once('ready', async () => {
-  console.log('Bot is ready!');
+      ],
+    },
+    {
+      name: 'sää',
+      description: 'Get weather information for a city',
+      options: [
+        {
+          type: 3,  // STRING
+          name: 'city',
+          description: 'Enter the city name',
+          required: true,
+        },
+      ],
+    },
+  ];
 
   try {
-    // Ensure client.user.id is available before attempting to register commands
-    console.log('Bot Application ID:', client.user.id);
-
     console.log('Started refreshing application (/) commands.');
-
-    // Register the commands with Discord API
-    await rest.put(Routes.applicationCommands(client.user.id), {
+    // Registering commands globally for the bot
+    await rest.put(Routes.applicationCommands(clientId), {
       body: commands,
     });
-
     console.log('Successfully reloaded application (/) commands.');
   } catch (error) {
     console.error('Error registering commands:', error);
   }
-});
+}
 
-// Login to Discord with the bot's token
-client.login(process.env.BOT_TOKEN);
+registerCommands();

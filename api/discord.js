@@ -11,6 +11,13 @@ module.exports = async (req, res) => {
             const { commandName } = interaction.data;
 
             switch (commandName) {
+                case 'ping':
+                    return res.status(200).json({
+                        type: InteractionResponseType.ChannelMessageWithSource,
+                        data: {
+                          content: 'Pong!',
+                        },
+                      });
                 case 'weather':
                     return weatherCommand(interaction);
                 case 'gif':

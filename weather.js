@@ -1,54 +1,6 @@
-var Client = require('node-rest-client').Client;
-var client = new Client();
 const fetch = require("node-fetch")
 
-getWeather = async (city, msg) => {
-    if(!city){
-        return "anna kaupunki! esim: !sää Tampere"
-    }
-    else{
-        try{
-            // get AQI
-            const aqi_url = `https://api.waqi.info/feed/${city}/?token=${process.env.AQI_API_TOKEN}`;
-            const aqi_response = await fetch(aqi_url);
-            const aqi_result = await aqi_response.json();
-            console.log("AQI");
-            console.log(aqi_result);
-            let aqi = "-";
-            if(aqi_result.data.aqi){
-                aqi = aqi_result.data.aqi;
-            }
-            let pm10 = "-";
-            let pm25 = "-";
-            if(aqi_result.data.iaqi){
-                if(aqi_result.data.iaqi.pm10){
-                    pm10 = aqi_result.data.iaqi.pm10.v;
-                }
-                if(aqi_result.data.iaqi.pm25){
-                pm25 = aqi_result.data.iaqi.pm25.v;
-                }
-            }
-
-            const API_KEY = process.env.API_KEY_OPEN_WEATHER;
-            var url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&lang=fi&appid=${API_KEY}&units=metric`
-            
-            client.get(url,function(data,response){
-                
-                //console.log("response");
-                //console.log(response);
-                if(response.statusCode === 200){
-                    callBack(data, msg, aqi, pm10, pm25);
-                }
-            });
-        }
-        catch(e){
-            console.log(e);
-            msg.reply("Virhe sään hakemisessa!")
-        }
-    }
-};
-
-function callBack(body, msg, aqi, pm10, pm25) {
+weatherMsg = (body, aqi, pm10, pm25) => {
     try{
         console.log(body);
         let tempRespParsed = body; 
@@ -81,12 +33,67 @@ function callBack(body, msg, aqi, pm10, pm25) {
         console.log("AQI Level: " + aqi_level);
         tempStr = tempStr + " ( " + aqi_level + " )";
         console.log("tempStr", tempStr);
-        msg.reply(tempStr);
+        return tempStr;
     }
     catch(e){
-        msg.reply("");
+       return "";
     }
 };
+
+getWeather = async (city, msg) => {
+    if(!city){
+        return "anna kaupunki! esim: !sää Tampere"
+    }
+    else{
+        try{
+            // get AQI
+            const aqi_url = `https://api.waqi.info/feed/${city}/?token=${process.env.AQI_API_TOKEN}`;
+            const aqi_response = await fetch(aqi_url);
+            const aqi_result = await aqi_response.json();
+            console.log("AQI");
+            console.log(aqi_result);
+            let aqi = "-";
+            if(aqi_result.data.aqi){
+                aqi = aqi_result.data.aqi;
+            }
+            let pm10 = "-";
+            let pm25 = "-";
+            if(aqi_result.data.iaqi){
+                if(aqi_result.data.iaqi.pm10){
+                    pm10 = aqi_result.data.iaqi.pm10.v;
+                }
+                if(aqi_result.data.iaqi.pm25){
+                pm25 = aqi_result.data.iaqi.pm25.v;
+                }
+            }
+
+            let geo_loc_url = `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=5&appid=${process.env.OPEN_WEATHER_API_KEY}`
+            const geo_resp = await fetch(geo_loc_url);
+            let geo = await geo_resp.json();
+            console.log("GEO:" + JSON.stringify(geo));
+            let lat = geo[0].lat;
+            let lon = geo[0].lon;
+
+            var url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&lang=fi&units=metric&appid=${process.env.OPEN_WEATHER_API_KEY}`;
+            
+            const weather_resp = await fetch(url);
+            console.log(weather_resp);
+            if(weather_resp.status === 200){
+                let weather_data = await weather_resp.json();
+                const weatherStr = weatherMsg(weather_data, aqi, pm10, pm25);
+                msg.reply(weatherStr);
+            }
+            else{
+                msg.reply("Virhe sään hakemisessa!")
+            }
+        }
+        catch(e){
+            console.log(e);
+            msg.reply("Virhe sään hakemisessa!")
+        }
+    }
+};
+
 
 module.exports = {
     getWeather

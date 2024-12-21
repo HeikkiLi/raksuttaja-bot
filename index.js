@@ -3,7 +3,7 @@ require('dotenv').config()
 let Roll = require('roll')
 let { getWeather }= require('./weather.js');
 
-const {Client, RichEmbed} = require('discord.js');
+const {Client, RichEmbed, Embed} = require('discord.js');
 const fetch = require("node-fetch")
 
 const client = new Client();
@@ -53,11 +53,19 @@ client.on('message', async (msg) => {
     }
     else if(tokens[0] === '!gif'){
       const keyWords = tokens.slice(1, tokens.length).join(" ");
-      const url = `https://api.tenor.com/v1/search?q=${keyWords}&key=${process.env.TENOR_KEY}&limit=25&contentfilter=low`;
+  
+      const url = `https://tenor.googleapis.com/v2/search?q=${keyWords}&key=${process.env.TENOR_KEY}&limit=25&contentfilter=low`;
+      
       const response = await fetch(url);
       const result = await response.json();
+
       const index = Math.floor(Math.random() * result.results.length);
-      msg.channel.send(result.results[index].url);
+      
+      const gifUrl = result.results[index]["media_formats"]["gif"]["url"];
+
+      // Send the GIF URL as a message back to the channel
+      msg.channel.send(gifUrl);
+      
     }
     else if(tokens[0] === '!poll'){
       const Embed = new RichEmbed()

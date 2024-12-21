@@ -1,6 +1,8 @@
-require('dotenv').config();
+const { Client, GatewayIntentBits } = require('discord.js');
 const { REST } = require('@discordjs/rest');
-const { Routes } = require('discord-api-types/v9');
+const { Routes } = require('discord-api-types/v10');
+
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 const commands = [
   {
@@ -42,19 +44,29 @@ const commands = [
   // more commands here
 ];
 
+
+// Create a new REST client with the bot's token
 const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
 
-(async () => {
-    try {
-        console.log('Started refreshing application (/) commands.');
+client.once('ready', async () => {
+  console.log('Bot is ready!');
 
-        await rest.put(
-            Routes.applicationCommands(process.env.CLIENT_ID),
-            { body: commands }
-        );
+  try {
+    // Ensure client.user.id is available before attempting to register commands
+    console.log('Bot Application ID:', client.user.id);
 
-        console.log('Successfully reloaded application (/) commands.');
-    } catch (error) {
-        console.error(error);
-    }
-})();
+    console.log('Started refreshing application (/) commands.');
+
+    // Register the commands with Discord API
+    await rest.put(Routes.applicationCommands(client.user.id), {
+      body: commands,
+    });
+
+    console.log('Successfully reloaded application (/) commands.');
+  } catch (error) {
+    console.error('Error registering commands:', error);
+  }
+});
+
+// Login to Discord with the bot's token
+client.login(process.env.BOT_TOKEN);

@@ -11,12 +11,5 @@
       "src": "/api/(.*)",
       "dest": "/api/$1"
     }
-  ],
-  "env": {
-    "DISCORD_TOKEN": "@discord_token",
-    "DISCORD_CLIENT_ID": "@discord_client_id",
-    "DISCORD_PUBLIC_KEY": "@discord_public_key",
-    "OPEN_WEATHER_API_KEY": "@open_weather_api_key",
-    "AQI_API_TOKEN": "@aqi_api_token"
-  }
+  ]
 }
